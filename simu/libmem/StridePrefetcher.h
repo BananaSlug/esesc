@@ -41,7 +41,7 @@
 #include "Port.h"
 #include "MemRequest.h"
 #include "MemObj.h"
-#include "DDR2.h"
+//#include "DDR2.h"
 
 #include <queue>
 #include <vector>
@@ -109,8 +109,10 @@ private:
   typedef HASH_MAP<AddrType, std::queue<MemRequest *>, AddrTypeHashFunc> penReqMapper;
   typedef HASH_SET<AddrType, AddrTypeHashFunc> penFetchSet;
 
-  penReqMapper pendingRequests;
-  penFetchSet pendingFetches;
+
+  uint32_t pendingRequests;
+  uint32_t pendingFetches;
+
 
   BuffType *buff;
   PfTable  *table;
@@ -175,6 +177,7 @@ public:
 
   // DOWN
   void busRead(MemRequest *req);
+  void busReadAck(MemRequest *mreq);
   void pushDown(MemRequest *req);
   
   // UP
@@ -206,7 +209,6 @@ public:
   Time_t nextTableSlot() {
     return tablePort->nextSlot();
   }
-
 };
 
 #endif

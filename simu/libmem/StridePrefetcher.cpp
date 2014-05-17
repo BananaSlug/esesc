@@ -41,7 +41,9 @@
 /* }}} */
 
 static pool < std::queue<MemRequest *> > activeMemReqPool(32, "StridePrefetcher");
-
+/****************************/
+/* START OF STRIDE FUNCTION */
+/****************************/
 StridePrefetcher::StridePrefetcher(MemorySystem* current ,const char *section ,const char *name)
   /* constructor {{{1 */
   :MemObj(section, name)
@@ -128,7 +130,12 @@ StridePrefetcher::StridePrefetcher(MemorySystem* current ,const char *section ,c
   //Is this the memory  
   isMemoryBus = false; 
 }
-/* }}} */
+/****************************/
+/*  END OF STRIDE FUNCTION  */
+/****************************/
+
+
+
 
 Time_t StridePrefetcher::nextReadSlot(       const MemRequest *mreq)
   /* calculate next free time {{{1 */

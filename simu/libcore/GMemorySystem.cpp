@@ -130,10 +130,11 @@ MemObj *GMemorySystem::buildMemoryObj(const char *type, const char *section, con
         || strcasecmp(type, "icache")  == 0
         || strcasecmp(type, "scache")  == 0
 /* prefetcher */
+#if 0
         || strcasecmp(type, "stridePrefetcher")  == 0
-#if 0        
-        //To Be implemented
+#endif 
         || strcasecmp(type, "markovPrefetcher")  == 0
+#if 0  
         || strcasecmp(type, "taggedPrefetcher")  == 0
 #endif
 /* #ifdef FERMI {{{1 */ 

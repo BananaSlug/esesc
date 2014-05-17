@@ -89,9 +89,11 @@ MemObj *MemorySystem::buildMemoryObj(const char *device_type, const char *dev_se
   } else if (!strcasecmp(device_type, "stridePrefetcher")) {
     mdev = new StridePrefetcher(this, dev_section, dev_name);
     devtype = 5;
+#endif
   } else if (!strcasecmp(device_type, "markovPrefetcher")) {
     mdev = new MarkovPrefetcher(this, dev_section, dev_name);
     devtype = 6;
+#if 0
   } else if (!strcasecmp(device_type, "taggedPrefetcher")) {
     mdev = new TaggedPrefetcher(this, dev_section, dev_name);
     devtype = 7;
