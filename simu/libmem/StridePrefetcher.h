@@ -1,4 +1,4 @@
-#if 0
+#if 1
 /* License & includes */ 
 /* 
    ESESC: Super ESCalar simulator
@@ -30,6 +30,7 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "MemRequest.h"
 #include "MemObj.h"
 #include "DDR2.h"
+#include "MSHR.h"
 
 #include <queue>
 #include <vector>
@@ -41,9 +42,9 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "CacheCore.h"
 
 
-class BState : public StateGeneric<AddrType> {
+class BStrideState : public StateGeneric<AddrType> {
   public:
-    BState(int32_t lineSize) {
+    BStrideState(int32_t lineSize) {
     }
 };
 
@@ -65,8 +66,8 @@ class PfState : public StateGeneric <AddrType> {
 class StridePrefetcher: public MemObj {
 
 private:
-  typedef CacheGeneric<BState,AddrType> BuffType;
-  typedef CacheGeneric<BState,AddrType>::CacheLine bLine;
+  typedef CacheGeneric<BStrideState,AddrType> BuffType;
+  typedef CacheGeneric<BStrideState,AddrType>::CacheLine bLine;
 
   typedef CacheGeneric<PfState,AddrType> PfTable;
   typedef CacheGeneric<PfState,AddrType>::CacheLine pEntry;
@@ -97,8 +98,8 @@ private:
   typedef HASH_MAP<AddrType, std::queue<MemRequest *>, AddrTypeHashFunc> penReqMapper;
   typedef HASH_SET<AddrType, AddrTypeHashFunc> penFetchSet;
 
-  penReqMapper pendingRequests;
-  penFetchSet pendingFetches;
+  uint32_t pendingRequests;
+  uint32_t pendingFetches;
 
   BuffType *buff;
   PfTable  *table;
@@ -123,6 +124,8 @@ private:
   uint32_t maxStride;
   uint32_t MaxPendingRequests;
   static const int32_t pEntrySize = 8; // size of an entry in the prefetching table
+MSHR        *mshr;
+int32_t     lineSize;
   
   //int32_t defaultMask;
   AddrType defaultMask;
@@ -162,9 +165,10 @@ public:
   void writeAddress(MemRequest *req);
 
   // DOWN
+  void busReadAck(MemRequest *mreq);
   void busRead(MemRequest *req);
   void pushDown(MemRequest *req);
-  
+
   // UP
   void pushUp(MemRequest *req);
   void invalidate(MemRequest *req);
@@ -195,8 +199,12 @@ public:
     return tablePort->nextSlot();
   }
 
+typedef CallbackMember1<StridePrefetcher, MemRequest*, &StridePrefetcher::busReadAck> busReadAckCB;
+
 };
 
 #endif
 
 #endif
+
+

@@ -1,4 +1,4 @@
-#if 0
+#if 1
 /* License & includes {{{1 */
 /* 
    ESESC: Super ESCalar simulator
@@ -26,6 +26,7 @@ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 #include "SescConf.h"
 #include "MemorySystem.h"
 #include "StridePrefetcher.h"
+#include "MSHR.h"
 /* }}} */
 
 static pool < std::queue<MemRequest *> > activeMemReqPool(32, "StridePrefetcher");
@@ -43,6 +44,12 @@ StridePrefetcher::StridePrefetcher(MemorySystem* current ,const char *section ,c
   ,ignoredStreams("%s:ignoredStreams", name)
 {
   MemObj *lower_level = NULL;
+
+  char tmpName[512];
+  sprintf(tmpName, "%s", name);
+  const char* mshrSection = SescConf->getCharPtr(section,"MSHR");
+  lineSize = buff->getLineSize();
+  mshr = MSHR::create(tmpName, mshrSection, lineSize);
 
   // If MemLatency is 200 and busOcc is 10, then there can be at most 20
   // requests without saturating the bus. (VERIFY???) something like half sound
@@ -228,7 +235,7 @@ void StridePrefetcher::busRead(MemRequest *mreq)
 void StridePrefetcher::pushDown(MemRequest *mreq)
   /* push down {{{1 */
 {
-  Line *l = buff->writeLine(mreq->getAddr()); // Also for energy
+  bLine *l = buff->writeLine(mreq->getAddr()); // Also for energy
 
   if (mreq->isInvalidate()) {
     if (l)
@@ -261,8 +268,8 @@ void StridePrefetcher::pushUp(MemRequest *mreq)
     mreq->destroy();
     return;
   }
-
-  learnMiss(paddr);
+  AddrType paddr = mreq->getAddr() & defaultMask;
+  learnMiss(paddr, mreq);
 
   busReadAck(mreq);
 }
@@ -322,10 +329,10 @@ void StridePrefetcher::ffinvalidate(AddrType addr, int32_t ilineSize)
 }
 /* }}} */
 
-void StridePrefetcher::learnMiss(AddrType addr) {
+void StridePrefetcher::learnMiss(AddrType addr, MemRequest* orig_mreq) {
 
   AddrType paddr = addr & defaultMask;
-  Time_t lat = nextTableSlot() - globalClock;
+  //Time_t lat = nextTableSlot() - globalClock;
 
   bool foundUnitStride = false;
   uint32_t newStride = 0;
@@ -391,7 +398,8 @@ void StridePrefetcher::learnMiss(AddrType addr) {
     AddrType paddr = nextAddr & defaultMask;
     bLine *l = buff->readLine(paddr);
     if (l==0) {
-      MemRequest *mreq = MemRequest::createRead(this, nextAddr, 0);
+      DInst *dinst = orig_mreq->getDInst();
+      MemRequest *mreq = MemRequest::createRead(this, dinst, nextAddr, 0);
       router->fwdBusRead(mreq, missDelay); 
     }
   }

@@ -84,10 +84,10 @@ MemObj *MemorySystem::buildMemoryObj(const char *device_type, const char *dev_se
   } else if (!strcasecmp(device_type, "ghb")) {
     mdev = new GHB(this, dev_section, dev_name);
     devtype = 4;
-#if 0
   } else if (!strcasecmp(device_type, "stridePrefetcher")) {
     mdev = new StridePrefetcher(this, dev_section, dev_name);
     devtype = 5;
+#if 0
   } else if (!strcasecmp(device_type, "markovPrefetcher")) {
     mdev = new MarkovPrefetcher(this, dev_section, dev_name);
     devtype = 6;
